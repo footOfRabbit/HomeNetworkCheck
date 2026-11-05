@@ -1,0 +1,361 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb-network"
+      },
+      "description": "只看当前选中的单个目标 IP 的平均延迟。适合判断这个点在一段时间内是否整体变慢。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "displayName": "${target_ip}",
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb-network"
+          },
+          "query": "from(bucket: \"network\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"ping\" and r._field == \"average_response_ms\" and r.url == \"${target_ip}\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "平均延迟",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb-network"
+      },
+      "description": "只看当前选中目标的丢包率。这个面板最适合判断是不是出现了瞬断或短时严重不稳定。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "displayName": "${target_ip}",
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb-network"
+          },
+          "query": "from(bucket: \"network\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"ping\" and r._field == \"percent_packet_loss\" and r.url == \"${target_ip}\")\r\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\r\n  |> yield(name: \"mean\")",
+          "refId": "A"
+        }
+      ],
+      "title": "丢包率",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb-network"
+      },
+      "description": "只看当前选中目标的峰值延迟。平均值不高但这里频繁冲高，通常就说明有尖刺抖动。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "drawStyle": "line",
+            "fillOpacity": 12,
+            "lineInterpolation": "linear",
+            "lineWidth": 2,
+            "pointSize": 3,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "displayName": "${target_ip}",
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [
+            "lastNotNull",
+            "max",
+            "mean"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb-network"
+          },
+          "query": "from(bucket: \"network\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"ping\" and r._field == \"maximum_response_ms\" and r.url == \"${target_ip}\")\r\n  |> map(fn: (r) => ({ _time: r._time, _value: float(v: r._value), url: r.url }))\r\n  |> aggregateWindow(every: v.windowPeriod, fn: max, createEmpty: false)\r\n  |> yield(name: \"max\")",
+          "refId": "A"
+        }
+      ],
+      "title": "最大延迟",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "influxdb-network"
+      },
+      "description": "当前选中目标最近 5 分钟的状态时间线，依据丢包率分级着色：正常(0%)、轻微丢包(0-30%)、中度丢包(30-50%)、重度丢包(50-80%)、严重丢包(>80%)、离线(100%)，灰色表示该时间片没有数据。",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed"
+          },
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "color": "gray",
+                  "text": "无数据"
+                }
+              },
+              "type": "special"
+            },
+            {
+              "options": {
+                "正常": {
+                  "color": "green",
+                  "text": "正常"
+                },
+                "轻微丢包": {
+                  "color": "yellow",
+                  "text": "轻微丢包"
+                },
+                "中度丢包": {
+                  "color": "orange",
+                  "text": "中度丢包"
+                },
+                "重度丢包": {
+                  "color": "dark-orange",
+                  "text": "重度丢包"
+                },
+                "严重丢包": {
+                  "color": "red",
+                  "text": "严重丢包"
+                },
+                "离线": {
+                  "color": "dark-red",
+                  "text": "离线"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "displayName": "${target_ip}",
+          "noValue": "无数据"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 4,
+      "options": {
+        "colWidth": 0.9,
+        "legend": {
+          "displayMode": "hidden",
+          "placement": "bottom",
+          "showLegend": false
+        },
+        "mergeValues": true,
+        "rowHeight": 0.9,
+        "showValue": "never",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb-network"
+          },
+          "query": "from(bucket: \"network\")\r\n  |> range(start: -5m)\r\n  |> filter(fn: (r) => r._measurement == \"ping\" and r._field == \"percent_packet_loss\" and r.url == \"${target_ip}\")\r\n  |> map(fn: (r) => ({ _time: r._time, url: r.url, _value: if r._value >= 100.0 then \"离线\" else if r._value > 80.0 then \"严重丢包\" else if r._value > 50.0 then \"重度丢包\" else if r._value > 30.0 then \"中度丢包\" else if r._value > 0.0 then \"轻微丢包\" else \"正常\" }))\r\n  |> group(columns: [\"url\"])\r\n  |> aggregateWindow(every: 5s, fn: last, createEmpty: false)\r\n  |> yield(name: \"状态\")",
+          "refId": "A"
+        }
+      ],
+      "title": "最近 5 分钟状态",
+      "type": "state-timeline"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "network",
+    "raw",
+    "single-target"
+  ],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": true,
+          "text": "192.168.31.1",
+          "value": "192.168.31.1"
+        },
+        "datasource": {
+          "type": "influxdb",
+          "uid": "influxdb-network"
+        },
+        "definition": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(bucket: \"network\", tag: \"url\", predicate: (r) => r._measurement == \"ping\", start: -30d)",
+        "hide": 0,
+        "includeAll": false,
+        "label": "目标 IP",
+        "multi": false,
+        "name": "target_ip",
+        "options": [],
+        "query": "import \"influxdata/influxdb/schema\"\r\nschema.tagValues(bucket: \"network\", tag: \"url\", predicate: (r) => r._measurement == \"ping\", start: -30d)",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Raw Network Single Target",
+  "uid": "raw-network-single-target",
+  "version": 1,
+  "weekStart": ""
+}

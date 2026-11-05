@@ -1,0 +1,10 @@
+# Grafana 运行时数据（SQLite 数据库、插件缓存、导出产物、搜索索引等）
+# 由容器动态生成，不应纳入版本控制
+network-monitor/grafana/data/
+
+# 脚本运行日志
+network-monitor/scripts/logs/
+
+# Windows 系统文件
+Thumbs.db
+Desktop.ini
