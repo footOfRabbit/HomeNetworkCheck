@@ -39,7 +39,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "### 路径拓扑说明\n\n- **数据来源**：Telegraf 的 `inputs.exec` 每 **5 分钟** 对 4 个目标各跑一次 `tracert`，写入 InfluxDB 的 `traceroute` measurement。\n- **怎么看**：表格按 **目标 → 跳数** 排列，就是当前流量实际经过的路径顺序。\n- `*` 表示该跳 **没有响应**。骨干路由器普遍对 ICMP 限速，这是正常现象，不代表链路故障。\n- **平均延迟** 的单位是 `ms`，取 `tracert` 三次探测的平均值。\n- 这份数据只用于 **观察路径**，不做质量告警；链路质量请回到「总览页 / 单目标页」看。",
+        "content": "### 路径拓扑说明\n\n- **数据来源**：Telegraf 的 `inputs.exec` 每 **5 分钟** 对 4 个目标各跑一次 `tracert`，写入 InfluxDB 的 `traceroute` measurement。\n- **怎么看**：拓扑图里 **点 = 一层设备（IP）**，**线 = 两跳之间的连接**；顺着线的方向就是从内网到公网的去向。多个目标共用的跳点会自动合并成同一个点，所以会看到「先汇合、再分叉」的形状。\n- `*` 表示该跳 **没有响应**，图中以 `*` 节点表示。骨干路由器普遍对 ICMP 限速，这是正常现象，不代表链路故障。\n- 线上的数字是 **到达下一跳的平均延迟**，单位 `ms`。\n- 这份数据只用于 **观察路径**，不做质量告警；链路质量请回到「总览页 / 单目标页」看。\n- 需要逐跳明细时，展开页面底部的「路径明细（表格）」。",
         "mode": "markdown"
       },
       "pluginVersion": "13.2.2",
@@ -113,148 +113,29 @@
         "type": "influxdb",
         "uid": "influxdb-network"
       },
-      "description": "当前流量到各公网目标的路径明细。每一行是一跳：跳数从小到大就是由内到外的路径顺序。取的是所选时间范围内最后一次采集的结果。",
+      "description": "把选中目标的探测路径画成点线图：点是一层设备（IP），线是两跳之间的连接，多个目标共用的跳点会自动合并。线上的数字是到达下一跳的平均延迟（ms）。取所选时间范围内最后一次采集的结果。",
       "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "target"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "目标"
-              },
-              {
-                "id": "custom.width",
-                "value": 150
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "hop"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "跳数"
-              },
-              {
-                "id": "custom.width",
-                "value": 80
-              },
-              {
-                "id": "custom.align",
-                "value": "center"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "addr"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "设备地址"
-              },
-              {
-                "id": "custom.width",
-                "value": 220
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "rtt_ms"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "平均延迟"
-              },
-              {
-                "id": "unit",
-                "value": "ms"
-              },
-              {
-                "id": "custom.width",
-                "value": 140
-              },
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "-1": {
-                        "color": "dark-red",
-                        "index": 0,
-                        "text": "超时 / 无响应"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+        "defaults": {},
+        "overrides": []
       },
       "gridPos": {
-        "h": 16,
+        "h": 17,
         "w": 24,
         "x": 0,
         "y": 5
       },
       "id": 3,
       "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
+        "edges": {
+          "mainStatUnit": "ms",
+          "secondaryStatUnit": ""
         },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": false,
-            "displayName": "目标"
-          },
-          {
-            "desc": false,
-            "displayName": "跳数"
-          }
-        ]
+        "nodes": {
+          "mainStatUnit": "",
+          "secondaryStatUnit": ""
+        },
+        "zoomMode": "cooperative",
+        "layoutAlgorithm": "layered"
       },
       "pluginVersion": "13.2.2",
       "targets": [
@@ -263,12 +144,196 @@
             "type": "influxdb",
             "uid": "influxdb-network"
           },
-          "query": "from(bucket: \"network\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"traceroute\" and r._field == \"rtt_ms\")\r\n  |> filter(fn: (r) => r.target =~ /^(${target:regex})$\/)\r\n  |> group(columns: [\"target\", \"hop\"])\r\n  |> last()\r\n  |> group()\r\n  |> map(fn: (r) => ({ r with hop: int(v: r.hop) }))\r\n  |> keep(columns: [\"target\", \"hop\", \"addr\", \"_value\"])\r\n  |> rename(columns: {_value: \"rtt_ms\"})\r\n  |> sort(columns: [\"target\", \"hop\"])",
+          "query": "nodes0 = from(bucket: \"network\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"traceroute\" and r._field == \"rtt_ms\")\r\n  |> filter(fn: (r) => r.target =~ /^(${target:regex})$\/)\r\n  |> group(columns: [\"target\", \"hop\"])\r\n  |> last()\r\n  |> group()\r\n  |> map(fn: (r) => ({ r with hop: int(v: r.hop) }))\r\n  |> rename(columns: {target: \"probe\"})\r\n\r\nnodes0\r\n  |> map(fn: (r) => ({ r with nid: if r.addr == \"*\" then r.probe + \" hop\" + string(v: r.hop) else r.addr, ntitle: if r.addr == \"*\" then \"*\" else r.addr }))\r\n  |> group(columns: [\"nid\", \"ntitle\"])\r\n  |> last()\r\n  |> group()\r\n  |> keep(columns: [\"nid\", \"ntitle\"])\r\n  |> rename(columns: {nid: \"id\", ntitle: \"title\"})",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb-network"
+          },
+          "query": "base = from(bucket: \"network\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"traceroute\" and r._field == \"rtt_ms\")\r\n  |> filter(fn: (r) => r.target =~ /^(${target:regex})$\/)\r\n  |> group(columns: [\"target\", \"hop\"])\r\n  |> last()\r\n  |> group()\r\n  |> map(fn: (r) => ({ r with hop: int(v: r.hop) }))\r\n  |> rename(columns: {target: \"probe\", _value: \"rtt\"})\r\n  |> keep(columns: [\"probe\", \"hop\", \"addr\", \"rtt\", \"_time\"])\r\n\r\na = base |> rename(columns: {addr: \"s_addr\", rtt: \"s_rtt\"})\r\nb = base |> map(fn: (r) => ({ r with hop: r.hop - 1 })) |> drop(columns: [\"_time\"]) |> rename(columns: {addr: \"d_addr\", rtt: \"d_rtt\"})\r\n\r\njoin(tables: {a: a, b: b}, on: [\"probe\", \"hop\"])\r\n  |> map(fn: (r) => ({ r with s_node: if r.s_addr == \"*\" then r.probe + \" hop\" + string(v: r.hop) else r.s_addr, d_node: if r.d_addr == \"*\" then r.probe + \" hop\" + string(v: r.hop + 1) else r.d_addr }))\r\n  |> filter(fn: (r) => r.s_node != r.d_node)\r\n  |> group(columns: [\"s_node\", \"d_node\"])\r\n  |> first(column: \"d_rtt\")\r\n  |> group()\r\n  |> map(fn: (r) => ({ id: r.s_node + \"|\" + r.d_node, source: r.s_node, target: r.d_node, mainStat: r.d_rtt }))",
+          "refId": "B"
         }
       ],
       "title": "路径拓扑",
-      "type": "table"
+      "type": "nodeGraph"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 22
+      },
+      "id": 4,
+      "panels": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "influxdb-network"
+          },
+          "description": "当前流量到各公网目标的路径明细。每一行是一跳：跳数从小到大就是由内到外的路径顺序。取的是所选时间范围内最后一次采集的结果。",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "text",
+                    "value": null
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "target"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "目标"
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 150
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "hop"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "跳数"
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 80
+                  },
+                  {
+                    "id": "custom.align",
+                    "value": "center"
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "addr"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "设备地址"
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 220
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "rtt_ms"
+                },
+                "properties": [
+                  {
+                    "id": "displayName",
+                    "value": "平均延迟"
+                  },
+                  {
+                    "id": "unit",
+                    "value": "ms"
+                  },
+                  {
+                    "id": "custom.width",
+                    "value": 140
+                  },
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "-1": {
+                            "color": "dark-red",
+                            "index": 0,
+                            "text": "超时 / 无响应"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 16,
+            "w": 24,
+            "x": 0,
+            "y": 23
+          },
+          "id": 5,
+          "options": {
+            "cellHeight": "sm",
+            "footer": {
+              "countRows": false,
+              "fields": "",
+              "reducer": [
+                "sum"
+              ],
+              "show": false
+            },
+            "showHeader": true,
+            "sortBy": [
+              {
+                "desc": false,
+                "displayName": "目标"
+              },
+              {
+                "desc": false,
+                "displayName": "跳数"
+              }
+            ]
+          },
+          "pluginVersion": "13.2.2",
+          "targets": [
+            {
+              "datasource": {
+                "type": "influxdb",
+                "uid": "influxdb-network"
+              },
+              "query": "from(bucket: \"network\")\r\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\r\n  |> filter(fn: (r) => r._measurement == \"traceroute\" and r._field == \"rtt_ms\")\r\n  |> filter(fn: (r) => r.target =~ /^(${target:regex})$\/)\r\n  |> group(columns: [\"target\", \"hop\"])\r\n  |> last()\r\n  |> group()\r\n  |> map(fn: (r) => ({ r with hop: int(v: r.hop) }))\r\n  |> keep(columns: [\"target\", \"hop\", \"addr\", \"_value\"])\r\n  |> rename(columns: {_value: \"rtt_ms\"})\r\n  |> sort(columns: [\"target\", \"hop\"])",
+              "refId": "A"
+            }
+          ],
+          "title": "路径明细",
+          "type": "table"
+        }
+      ],
+      "title": "路径明细（表格）",
+      "type": "row"
     }
   ],
   "refresh": "1m",
